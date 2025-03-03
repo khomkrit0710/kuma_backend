@@ -5,113 +5,92 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
+type CustomUser = {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: string;
+};
+
+type Admin = {
+  id: number;
+  username: string;
+  role: string;
+  createdAt: string;
+};
+
 export default function AdminManage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [admins, setAdmins] = useState([]);
+  const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // แบบฟอร์มสำหรับเพิ่ม admin ใหม่
-  const [newAdmin, setNewAdmin] = useState({
-    username: '',
-    password: '',
-    role: 'ADMIN'
-  });
-  
-  // แสดงหรือซ่อนแบบฟอร์มเพิ่ม admin
+  const [newAdmin, setNewAdmin] = useState({ username: '', password: '', role: 'ADMIN' });
   const [showAddForm, setShowAddForm] = useState(false);
   
-  // สถานะแบบฟอร์มแก้ไขรหัสผ่าน
-  const [passwordReset, setPasswordReset] = useState({
+  const [passwordReset, setPasswordReset] = useState<{
+    adminId: number | null;
+    newPassword: string;
+    showForm: boolean;
+  }>({
     adminId: null,
     newPassword: '',
     showForm: false
   });
+  
 
-  // ตรวจสอบสิทธิ์การเข้าถึง
   useEffect(() => {
     if (status === 'loading') return;
-    
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
       router.push('/');
     } else {
-      // ถ้ามีสิทธิ์ Super Admin ให้โหลดข้อมูล admin ทั้งหมด
       fetchAdmins();
     }
   }, [session, status, router]);
 
-  // ดึงข้อมูล admin ทั้งหมด
   const fetchAdmins = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin');
-      const data = await response.json();
-      
-      if (response.ok) {
-        setAdmins(data);
-      } else {
-        setError(data.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
-      }
-    } catch (error) {
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const response = await fetch('/api/admin');
+    const data = await response.json();
+    if (response.ok) {
+      setAdmins(data);
+    } else {
+      setError(data.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    }
+    setLoading(false);
+  };
+
+  const addNewAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const response = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newAdmin),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setNewAdmin({ username: '', password: '', role: 'ADMIN' });
+      setShowAddForm(false);
+      fetchAdmins();
+    } else {
+      setError(data.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ดูแลระบบ');
     }
   };
 
-  // เพิ่ม admin ใหม่
-  const addNewAdmin = async (e) => {
+  const resetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    try {
-      const response = await fetch('/api/admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newAdmin),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        // รีเซ็ตแบบฟอร์มและโหลดข้อมูลใหม่
-        setNewAdmin({ username: '', password: '', role: 'ADMIN' });
-        setShowAddForm(false);
-        fetchAdmins();
-      } else {
-        setError(data.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ดูแลระบบ');
-      }
-    } catch (error) {
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
-    }
-  };
-
-  // เปลี่ยนรหัสผ่าน admin
-  const resetPassword = async (e) => {
-    e.preventDefault();
-    
-    try {
-      const response = await fetch(`/api/admin/${passwordReset.adminId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: passwordReset.newPassword }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        // รีเซ็ตแบบฟอร์ม
-        setPasswordReset({ adminId: null, newPassword: '', showForm: false });
-        alert('เปลี่ยนรหัสผ่านสำเร็จ');
-      } else {
-        setError(data.message || 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
-      }
-    } catch (error) {
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+    const response = await fetch(`/api/admin/${passwordReset.adminId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: passwordReset.newPassword }),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setPasswordReset({ adminId: null, newPassword: '', showForm: false });
+      alert('เปลี่ยนรหัสผ่านสำเร็จ');
+    } else {
+      setError(data.message || 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
     }
   };
 
@@ -119,8 +98,8 @@ export default function AdminManage() {
     return <div className="p-8">กำลังโหลด...</div>;
   }
 
-  if (!session || session.user.role !== 'SUPER_ADMIN') {
-    return null; // จะถูก redirect ไปที่หน้าหลักโดย useEffect
+  if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
+    return null;
   }
 
   return (

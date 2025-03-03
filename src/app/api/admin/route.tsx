@@ -7,13 +7,20 @@ import { authOptions } from '../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+type CustomUser = {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: string;
+};
+
 // ดึงข้อมูล admin ทั้งหมด
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     
     // ตรวจสอบสิทธิ์ Super Admin
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'ไม่มีสิทธิ์เข้าถึงข้อมูล' },
         { status: 403 }
@@ -46,7 +53,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     // ตรวจสอบสิทธิ์ Super Admin
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'ไม่มีสิทธิ์เพิ่มผู้ดูแลระบบ' },
         { status: 403 }
@@ -81,7 +88,8 @@ export async function POST(request: NextRequest) {
     });
     
     // ส่งข้อมูลกลับโดยไม่เปิดเผยรหัสผ่าน
-    const { password: _pwd, ...adminWithoutPassword } = newAdmin;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...adminWithoutPassword } = newAdmin;
     
     return NextResponse.json(adminWithoutPassword, { status: 201 });
   } catch (error) {

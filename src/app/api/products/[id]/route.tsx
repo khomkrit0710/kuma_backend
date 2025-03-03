@@ -30,7 +30,12 @@ export async function GET(
     }
     
     const product = await prisma.product.findUnique({
-      where: { id },
+      where: { 
+        id_sku: { 
+          id, 
+          sku: "" 
+        } 
+      },
     });
     
     if (!product) {
@@ -88,13 +93,18 @@ export async function PUT(
     
     // อัพเดทข้อมูลสินค้า
     const product = await prisma.product.update({
-      where: { id },
+      where: { 
+        id_sku: { 
+          id, 
+          sku: "" 
+        } 
+      },
       data: {
         sku: data.sku,
-        name: data.name,
-        price: data.price,
-        product_type: data.product_type || null,
-        product_set: data.product_set || null,
+        name_sku: data.name,
+        price_origin: data.price,
+        catagory: data.product_type || null,
+        collaction: data.product_set || null,
       },
     });
     
@@ -136,7 +146,12 @@ export async function DELETE(
     
     // ลบสินค้า
     await prisma.product.delete({
-      where: { id },
+      where: { 
+        id_sku: { 
+          id, 
+          sku: "" 
+        } 
+      },
     });
     
     return NextResponse.json({ message: 'ลบสินค้าสำเร็จ' });

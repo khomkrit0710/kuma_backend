@@ -99,26 +99,6 @@ export default function ProductList() {
     });
   };
 
-  const ImageFallback = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
-    return (
-      <div className={className}>
-        <div className="relative h-full w-full">
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            className="object-cover"
-            onError={(e) => {
-              // Handle image load error - setting fallback image URL
-              const target = e.target as HTMLImageElement;
-              target.src = 'https://via.placeholder.com/40?text=X';
-            }}
-          />
-        </div>
-      </div>
-    );
-  };
-
   if (status === 'loading' || loading) {
     return <div className="p-8">กำลังโหลด...</div>;
   }

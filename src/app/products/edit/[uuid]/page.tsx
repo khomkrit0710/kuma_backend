@@ -83,7 +83,7 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
       setGroupData(data.group);
       
       // ตั้งค่ารายการสินค้า
-      setProducts(data.products.map(product => ({
+      setProducts(data.products.map((product: Product) => ({
         sku: product.sku,
         name_sku: product.name_sku,
         quantity: product.quantity,

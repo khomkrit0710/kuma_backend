@@ -11,11 +11,22 @@ interface UserCredentials {
   username: string;
   password: string;
 }
-
 interface UserData {
   id: string;
   username: string;
   role: string;
+}
+
+declare module "next-auth" {
+  interface User {
+    id: string;
+    username: string;
+    role: string;
+  }
+
+  interface Session {
+    user: User;
+  }
 }
 
 export const authOptions: NextAuthOptions = {

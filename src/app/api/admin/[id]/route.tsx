@@ -7,38 +7,57 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+type CustomUser = {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: string;
+};
+
+
+
 // ดึงข้อมูล admin คนเดียว
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     // ตรวจสอบสิทธิ์ Super Admin
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'ไม่มีสิทธิ์เข้าถึงข้อมูล' },
         { status: 403 }
       );
     }
-    
-    const id = parseInt(context.params.id);
-    
+
+    // แปลง id จาก string เป็น number และตรวจสอบค่าที่ถูกต้อง
+    const id = parseInt(params.id, 10);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { message: 'ID ไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    // ค้นหาข้อมูล admin
     const admin = await prisma.admin.findUnique({
       where: { id },
     });
-    
+
     if (!admin) {
       return NextResponse.json(
         { message: 'ไม่พบผู้ดูแลระบบ' },
         { status: 404 }
       );
     }
-    
+
     // ส่งข้อมูลกลับโดยไม่เปิดเผยรหัสผ่าน
-    const { password: _pwd, ...adminWithoutPassword } = admin;
-    
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...adminWithoutPassword } = admin;
+
     return NextResponse.json(adminWithoutPassword);
   } catch (error) {
     console.error('เกิดข้อผิดพลาดในการดึงข้อมูล admin:', error);
@@ -68,7 +87,7 @@ export async function PATCH(
     const session = await getServerSession(authOptions);
     
     // ตรวจสอบสิทธิ์ Super Admin
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'ไม่มีสิทธิ์แก้ไขข้อมูล' },
         { status: 403 }
@@ -109,7 +128,8 @@ export async function PATCH(
     });
     
     // ส่งข้อมูลกลับโดยไม่เปิดเผยรหัสผ่าน
-    const { password: _pwd, ...adminWithoutPassword } = updatedAdmin;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...adminWithoutPassword } = updatedAdmin;
     
     return NextResponse.json(adminWithoutPassword);
   } catch (error) {
@@ -130,7 +150,7 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
     
     // ตรวจสอบสิทธิ์ Super Admin
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'ไม่มีสิทธิ์ลบข้อมูล' },
         { status: 403 }
@@ -152,7 +172,7 @@ export async function DELETE(
     }
     
     // ไม่อนุญาตให้ลบตัวเอง
-    if (session.user.id && parseInt(session.user.id) === id) {
+    if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { message: 'ไม่สามารถลบบัญชีของตัวเองได้' },
         { status: 400 }

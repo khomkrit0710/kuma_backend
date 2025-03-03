@@ -26,12 +26,8 @@ interface GroupFormData {
   description: string;
 }
 
-interface FormEvent extends React.FormEvent<HTMLFormElement> {
-  target: HTMLFormElement;
-}
-
 export default function AddProduct() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

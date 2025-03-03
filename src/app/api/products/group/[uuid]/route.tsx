@@ -38,55 +38,37 @@ export async function GET(
   request: NextRequest,
   context: { params: { uuid: string } }
 ) {
-  try {
-    const uuid = context.params.uuid;
-    
-    if (!uuid) {
-      return NextResponse.json(
-        { message: 'ต้องระบุ UUID' },
-        { status: 400 }
-      );
-    }
-    
-    // ดึงข้อมูลกลุ่มสินค้า
-    const group = await prisma.group_product.findFirst({
-      where: { uuid },
-    });
-    
-    if (!group) {
-      return NextResponse.json(
-        { message: 'ไม่พบกลุ่มสินค้า' },
-        { status: 404 }
-      );
-    }
-    
-    // ดึงข้อมูลสินค้าทั้งหมดในกลุ่ม
-    const products = await prisma.product.findMany({
-      where: { uuid },
-    });
-    
-    return NextResponse.json({
-      group,
-      products,
-    });
-  } catch (error) {
-    console.error('เกิดข้อผิดพลาดในการดึงข้อมูลกลุ่มสินค้า:', error);
-    return NextResponse.json(
-      { message: 'เกิดข้อผิดพลาดในการดึงข้อมูลกลุ่มสินค้า' },
-      { status: 500 }
-    );
-  } finally {
-    await prisma.$disconnect();
+  const uuid = context.params.uuid; 
+
+
+  if (!uuid || typeof uuid !== 'string') {
+    return NextResponse.json({ message: 'UUID ไม่ถูกต้อง' }, { status: 400 });
   }
+
+  const group = await prisma.group_product.findFirst({
+    where: { uuid },
+  });
+
+  if (!group) {
+    return NextResponse.json({ message: 'ไม่พบกลุ่มสินค้า' }, { status: 404 });
+  }
+
+  const products = await prisma.product.findMany({
+    where: { uuid },
+  });
+
+  return NextResponse.json({ group, products });
 }
+
+
 
 // API endpoint สำหรับแก้ไขข้อมูลกลุ่มสินค้า
 export async function PUT(
   request: NextRequest,
-  context: { params: { uuid: string } }
+  { params }: { params: { uuid: string } }
 ) {
   try {
-    const uuid = context.params.uuid;
+    const uuid = params.uuid;
     
     // ตรวจสอบการล็อกอิน
     const session = await getServerSession(authOptions);
@@ -203,10 +185,10 @@ export async function PUT(
 // API endpoint สำหรับลบกลุ่มสินค้าและสินค้าที่เกี่ยวข้อง
 export async function DELETE(
   request: NextRequest,
-  context: { params: { uuid: string } }
+  { params }: { params: { uuid: string } }
 ) {
   try {
-    const uuid = context.params.uuid;
+    const uuid = params.uuid;
     
     // ตรวจสอบการล็อกอิน
     const session = await getServerSession(authOptions);
