@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, Tag, Package2, ShoppingCart, Box, Info } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Product {
   id: number;
@@ -41,7 +42,7 @@ interface GroupData {
 }
 
 export default function ViewProduct({ params }: { params: { uuid: string } }) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [groupData, setGroupData] = useState<GroupData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,17 +50,8 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
   const [activeTab, setActiveTab] = useState<'info' | 'products'>('info');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // ตรวจสอบสถานะการล็อกอิน
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated') {
-      fetchGroupData();
-    }
-  }, [status, router, params.uuid]);
-
   // ดึงข้อมูลกลุ่มสินค้าและสินค้าทั้งหมด
-  const fetchGroupData = async () => {
+  const fetchGroupData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/products/group/${params.uuid}`);
@@ -76,7 +68,16 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.uuid]);
+
+  // ตรวจสอบสถานะการล็อกอิน
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    } else if (status === 'authenticated') {
+      fetchGroupData();
+    }
+  }, [status, router, fetchGroupData]);
 
   // แปลงวันที่ให้อยู่ในรูปแบบที่อ่านง่าย
   const formatDate = (dateString: string) => {
@@ -153,14 +154,20 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
             {groupData.group.main_img_url && groupData.group.main_img_url.length > 0 ? (
               <div>
                 <div className="mb-4 rounded-lg overflow-hidden bg-white border">
-                  <img
-                    src={groupData.group.main_img_url[activeImageIndex]}
-                    alt={`รูปภาพ ${activeImageIndex + 1}`}
-                    className="w-full h-96 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://via.placeholder.com/400x400?text=No+Image';
-                    }}
-                  />
+                  <div className="relative w-full h-96">
+                    <Image
+                      src={groupData.group.main_img_url[activeImageIndex]}
+                      alt={`รูปภาพ ${activeImageIndex + 1}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain"
+                      onError={(e) => {
+                        // Handle image load error - setting fallback image URL
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/400x400?text=No+Image';
+                      }}
+                    />
+                  </div>
                 </div>
                 {groupData.group.main_img_url.length > 1 && (
                   <div className="grid grid-cols-5 gap-2">
@@ -174,14 +181,20 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
                         } rounded overflow-hidden`}
                         onClick={() => setActiveImageIndex(index)}
                       >
-                        <img
-                          src={url}
-                          alt={`รูปภาพย่อ ${index + 1}`}
-                          className="w-full h-16 object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://via.placeholder.com/60x60?text=X';
-                          }}
-                        />
+                        <div className="relative w-full h-16">
+                          <Image
+                            src={url}
+                            alt={`รูปภาพย่อ ${index + 1}`}
+                            fill
+                            sizes="60px"
+                            className="object-cover"
+                            onError={(e) => {
+                              // Handle image load error - setting fallback image URL
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/60x60?text=X';
+                            }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -301,14 +314,20 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
                   >
                     <div className="w-16 h-16 bg-gray-100 flex-shrink-0 rounded overflow-hidden">
                       {product.img_url ? (
-                        <img
-                          src={product.img_url}
-                          alt={product.name_sku}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://via.placeholder.com/60x60?text=X';
-                          }}
-                        />
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={product.img_url}
+                            alt={product.name_sku}
+                            fill
+                            sizes="(max-width: 768px) 64px, 64px"
+                            className="object-cover"
+                            onError={(e) => {
+                              // Handle image load error
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/60x60?text=X';
+                            }}
+                          />
+                        </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <ShoppingCart size={24} className="text-gray-400" />

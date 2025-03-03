@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Edit, Trash2, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface GroupProduct {
   id: number;
@@ -17,7 +18,7 @@ interface GroupProduct {
 }
 
 export default function ProductList() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [groups, setGroups] = useState<GroupProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +99,26 @@ export default function ProductList() {
     });
   };
 
+  const ImageFallback = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
+    return (
+      <div className={className}>
+        <div className="relative h-full w-full">
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            className="object-cover"
+            onError={(e) => {
+              // Handle image load error - setting fallback image URL
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://via.placeholder.com/40?text=X';
+            }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   if (status === 'loading' || loading) {
     return <div className="p-8">กำลังโหลด...</div>;
   }
@@ -176,14 +197,20 @@ export default function ProductList() {
                       <div className="flex -space-x-2">
                         {group.main_img_url.slice(0, 3).map((url, index) => (
                           <div key={index} className="h-10 w-10 rounded-full border-2 border-white overflow-hidden">
-                            <img
-                              src={url}
-                              alt={`รูปภาพ ${index + 1}`}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = 'https://via.placeholder.com/40?text=X';
-                              }}
-                            />
+                            <div className="relative h-full w-full">
+                              <Image
+                                src={url}
+                                alt={`รูปภาพ ${index + 1}`}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                                onError={(e) => {
+                                  // Handle image load error - setting fallback image URL
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'https://via.placeholder.com/40?text=X';
+                                }}
+                              />
+                            </div>
                           </div>
                         ))}
                         {group.main_img_url.length > 3 && (

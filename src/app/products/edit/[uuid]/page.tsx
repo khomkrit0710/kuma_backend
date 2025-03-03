@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Trash2, Save, Image, X, ArrowLeft, Edit, Check } from 'lucide-react';
+import { Edit, Trash2, Save, ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 
 interface Product {
@@ -45,7 +45,7 @@ interface EditProductState extends Omit<Product, 'id' | 'uuid' | 'create_Date' |
 }
 
 export default function EditProduct({ params }: { params: { uuid: string } }) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [originalData, setOriginalData] = useState<GroupData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,16 +67,7 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
   const [tempImageUrl, setTempImageUrl] = useState('');
 
   // ดึงข้อมูลเมื่อโหลดหน้า
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated') {
-      fetchGroupData();
-    }
-  }, [status, router, params.uuid]);
-
-  // ดึงข้อมูลกลุ่มสินค้าและสินค้า
-  const fetchGroupData = async () => {
+  const fetchGroupData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/products/group/${params.uuid}`);
@@ -112,34 +103,44 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.uuid]);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    } else if (status === 'authenticated') {
+      fetchGroupData();
+    }
+  }, [status, router, fetchGroupData]);
 
   // อัพเดทข้อมูลกลุ่มสินค้า
-  const handleGroupChange = (e) => {
+  const handleGroupChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setGroupData(prev => ({
-      ...prev!,
+    setGroupData(prev => prev ? {
+      ...prev,
       [name]: value
-    }));
+    } : null);
   };
 
   // เพิ่ม URL รูปภาพลงในรายการ
   const addImageUrl = () => {
-    if (!tempImageUrl.trim()) return;
+    if (!tempImageUrl.trim() || !groupData) return;
     
-    setGroupData(prev => ({
-      ...prev!,
-      main_img_url: [...prev!.main_img_url, tempImageUrl]
-    }));
+    setGroupData({
+      ...groupData,
+      main_img_url: [...groupData.main_img_url, tempImageUrl]
+    });
     setTempImageUrl('');
   };
 
   // ลบ URL รูปภาพออกจากรายการ
-  const removeImageUrl = (index) => {
-    setGroupData(prev => ({
-      ...prev!,
-      main_img_url: prev!.main_img_url.filter((_, i) => i !== index)
-    }));
+  const removeImageUrl = (index: number) => {
+    if (!groupData) return;
+    
+    setGroupData({
+      ...groupData,
+      main_img_url: groupData.main_img_url.filter((_, i) => i !== index)
+    });
   };
 
   // เริ่มแก้ไขสินค้า
@@ -175,19 +176,21 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
   };
 
   // อัพเดทข้อมูลสินค้าที่กำลังแก้ไข
-  const handleProductChange = (e) => {
+  const handleProductChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (!editingProduct) return;
+    
     const { name, value } = e.target;
-    let parsedValue = value;
+    let parsedValue: string | number | null = value;
     
     // แปลงข้อมูลตัวเลขให้ถูกต้อง
     if (['quantity', 'make_price', 'price_origin', 'product_width', 'product_length', 'product_heigth', 'product_weight'].includes(name)) {
       parsedValue = value === '' ? null : Number(value);
     }
     
-    setEditingProduct(prev => ({
-      ...prev!,
+    setEditingProduct(prev => prev ? {
+      ...prev,
       [name]: parsedValue
-    }));
+    } : null);
   };
 
   // บันทึกการแก้ไข/เพิ่มสินค้า
@@ -220,7 +223,7 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
   };
 
   // บันทึกข้อมูลทั้งหมด
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!groupData) return;
@@ -395,7 +398,10 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
                   onClick={addImageUrl}
                   className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700 transition-colors"
                 >
-                  <PlusCircle size={20} />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
                 </button>
               </div>
               
@@ -412,7 +418,10 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
                           onClick={() => removeImageUrl(index)}
                           className="ml-2 text-red-600 hover:text-red-800"
                         >
-                          <X size={18} />
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
                         </button>
                       </div>
                     ))}
@@ -434,7 +443,10 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
               onClick={startAddProduct}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors flex items-center gap-2"
             >
-              <PlusCircle size={20} />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
               เพิ่มสินค้า
             </button>
           )}
@@ -452,7 +464,10 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
                 onClick={cancelEditProduct}
                 className="text-gray-600 hover:text-gray-800"
               >
-                <X size={24} />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
               </button>
             </div>
             

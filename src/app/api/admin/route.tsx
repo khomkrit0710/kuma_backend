@@ -1,4 +1,4 @@
-// app/api/admin/route.ts
+// app/api/admin/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -8,7 +8,7 @@ import { authOptions } from '../auth/[...nextauth]/route';
 const prisma = new PrismaClient();
 
 // ดึงข้อมูล admin ทั้งหมด
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     
@@ -34,6 +34,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
+interface AdminRequestBody {
+  username: string;
+  password: string;
+  role: 'ADMIN' | 'SUPER_ADMIN';
+}
+
 // เพิ่ม admin ใหม่
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +53,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { username, password, role } = await request.json();
+    const data = await request.json() as AdminRequestBody;
+    const { username, password, role } = data;
     
     // ตรวจสอบว่า username ซ้ำหรือไม่
     const existingAdmin = await prisma.admin.findUnique({
@@ -69,12 +76,12 @@ export async function POST(request: NextRequest) {
       data: {
         username,
         password: hashedPassword,
-        role: role as 'ADMIN' | 'SUPER_ADMIN',
+        role: role,
       },
     });
     
     // ส่งข้อมูลกลับโดยไม่เปิดเผยรหัสผ่าน
-    const { password: _, ...adminWithoutPassword } = newAdmin;
+    const { password: _pwd, ...adminWithoutPassword } = newAdmin;
     
     return NextResponse.json(adminWithoutPassword, { status: 201 });
   } catch (error) {

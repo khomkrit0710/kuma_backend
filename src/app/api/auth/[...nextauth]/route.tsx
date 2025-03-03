@@ -1,12 +1,24 @@
-// app/api/auth/[...nextauth]/route.ts
+// app/api/auth/[...nextauth]/route.tsx
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcrypt";
+import { type NextAuthOptions } from "next-auth";
 
 const prisma = new PrismaClient();
 
-export const authOptions = {
+interface UserCredentials {
+  username: string;
+  password: string;
+}
+
+interface UserData {
+  id: string;
+  username: string;
+  role: string;
+}
+
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -19,10 +31,12 @@ export const authOptions = {
           return null;
         }
 
+        const { username, password } = credentials as UserCredentials;
+
         // ค้นหา admin จาก username
         const admin = await prisma.admin.findUnique({
           where: {
-            username: credentials.username,
+            username: username,
           },
         });
 
@@ -32,7 +46,7 @@ export const authOptions = {
 
         // ตรวจสอบรหัสผ่าน
         const passwordMatch = await bcrypt.compare(
-          credentials.password,
+          password,
           admin.password
         );
 
@@ -45,7 +59,7 @@ export const authOptions = {
           id: admin.id.toString(),
           username: admin.username,
           role: admin.role,
-        };
+        } as UserData;
       },
     }),
   ],
@@ -59,11 +73,11 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
-      session.user = {
-        id: token.id,
-        username: token.username,
-        role: token.role,
-      };
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.username = token.username as string;
+        session.user.role = token.role as string;
+      }
       return session;
     },
   },

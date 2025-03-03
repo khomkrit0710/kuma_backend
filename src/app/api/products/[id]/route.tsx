@@ -1,4 +1,4 @@
-// src/app/api/products/[id]/route.ts
+// src/app/api/products/[id]/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
@@ -6,13 +6,21 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+interface ProductData {
+  sku: string;
+  name: string;
+  price: number;
+  product_type?: string | null;
+  product_set?: string | null;
+}
+
 // API endpoint สำหรับดึงข้อมูลสินค้าตาม ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -47,7 +55,7 @@ export async function GET(
 // API endpoint สำหรับแก้ไขข้อมูลสินค้า
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     // ตรวจสอบการล็อกอิน
@@ -59,7 +67,7 @@ export async function PUT(
       );
     }
     
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -68,7 +76,7 @@ export async function PUT(
       );
     }
     
-    const data = await request.json();
+    const data = await request.json() as ProductData;
     
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!data.sku || !data.name || !data.price) {
@@ -105,7 +113,7 @@ export async function PUT(
 // API endpoint สำหรับลบสินค้า
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     // ตรวจสอบการล็อกอิน
@@ -117,7 +125,7 @@ export async function DELETE(
       );
     }
     
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     
     if (isNaN(id)) {
       return NextResponse.json(

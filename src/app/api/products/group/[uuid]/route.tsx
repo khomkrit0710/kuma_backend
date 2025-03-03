@@ -1,4 +1,4 @@
-// src/app/api/products/group/[uuid]/route.ts
+// src/app/api/products/group/[uuid]/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
@@ -6,15 +6,40 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+interface ProductData {
+  sku: string;
+  name_sku: string;
+  quantity?: number;
+  catagory?: string | null;
+  collaction?: string | null;
+  make_price?: number | null;
+  price_origin?: number;
+  product_width?: number | null;
+  product_length?: number | null;
+  product_heigth?: number | null;
+  product_weight?: number | null;
+  img_url?: string | null;
+}
+
+interface GroupData {
+  group_name?: string;
+  description?: string;
+  main_img_url?: string[];
+  sku?: string[];
+}
+
+interface RequestData {
+  group: GroupData;
+  products: ProductData[];
+}
+
 // API endpoint สำหรับดึงข้อมูลกลุ่มสินค้าและสินค้าที่เกี่ยวข้องตาม UUID
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ uuid: string }> }
+  context: { params: { uuid: string } }
 ) {
   try {
-    // ต้องใช้ await กับ params
-    const params = await context.params;
-    const uuid = params.uuid;
+    const uuid = context.params.uuid;
     
     if (!uuid) {
       return NextResponse.json(
@@ -58,12 +83,10 @@ export async function GET(
 // API endpoint สำหรับแก้ไขข้อมูลกลุ่มสินค้า
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  context: { params: { uuid: string } }
 ) {
   try {
-    // ใช้ params แบบ await
-    const paramsData = params;
-    const uuid = paramsData.uuid;
+    const uuid = context.params.uuid;
     
     // ตรวจสอบการล็อกอิน
     const session = await getServerSession(authOptions);
@@ -82,7 +105,7 @@ export async function PUT(
     }
     
     // อ่านข้อมูลจาก request
-    const data = await request.json();
+    const data = await request.json() as RequestData;
     const { group, products } = data;
     
     // ตรวจสอบว่ากลุ่มสินค้าที่ต้องการแก้ไขมีอยู่หรือไม่
@@ -122,7 +145,7 @@ export async function PUT(
         if (existingProduct) {
           // ถ้ามีอยู่แล้วให้อัปเดต
           return prisma.product.update({
-            where: { id: existingProduct.id },
+            where: { id_sku: { id: existingProduct.id, sku: existingProduct.sku } },
             data: {
               name_sku: product.name_sku || existingProduct.name_sku,
               quantity: product.quantity ?? existingProduct.quantity,
@@ -180,12 +203,10 @@ export async function PUT(
 // API endpoint สำหรับลบกลุ่มสินค้าและสินค้าที่เกี่ยวข้อง
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  context: { params: { uuid: string } }
 ) {
   try {
-    // ใช้ params แบบ await
-    const paramsData = params;
-    const uuid = paramsData.uuid;
+    const uuid = context.params.uuid;
     
     // ตรวจสอบการล็อกอิน
     const session = await getServerSession(authOptions);

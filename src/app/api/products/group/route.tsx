@@ -1,4 +1,4 @@
-// src/app/api/products/group/route.ts
+// src/app/api/products/group/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
@@ -6,6 +6,32 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
+
+interface ProductData {
+  sku: string;
+  name_sku: string;
+  quantity?: number;
+  catagory?: string | null;
+  collaction?: string | null;
+  make_price?: number | null;
+  price_origin?: number;
+  product_width?: number | null;
+  product_length?: number | null;
+  product_heigth?: number | null;
+  product_weight?: number | null;
+  img_url?: string | null;
+}
+
+interface GroupData {
+  group_name: string;
+  description?: string;
+  main_img_url?: string[];
+}
+
+interface RequestData {
+  group: GroupData;
+  products: ProductData[];
+}
 
 // API endpoint สำหรับเพิ่มกลุ่มสินค้าและสินค้า
 export async function POST(request: NextRequest) {
@@ -20,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
     
     // อ่านข้อมูลจาก request
-    const data = await request.json();
+    const data = await request.json() as RequestData;
     const { group, products } = data;
     
     // ตรวจสอบข้อมูลที่จำเป็น

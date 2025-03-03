@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Trash2, Save, Image, X } from 'lucide-react';
+import { PlusCircle, Trash2, Save } from 'lucide-react';
 
 interface ProductFormData {
   sku: string;
@@ -24,6 +24,10 @@ interface GroupFormData {
   group_name: string;
   main_img_url: string[];
   description: string;
+}
+
+interface FormEvent extends React.FormEvent<HTMLFormElement> {
+  target: HTMLFormElement;
 }
 
 export default function AddProduct() {
@@ -71,7 +75,7 @@ export default function AddProduct() {
   }, [status, router]);
 
   // อัพเดทข้อมูลกลุ่มสินค้า
-  const handleGroupChange = (e) => {
+  const handleGroupChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setGroupData(prev => ({
       ...prev,
@@ -91,7 +95,7 @@ export default function AddProduct() {
   };
 
   // ลบ URL รูปภาพออกจากรายการ
-  const removeImageUrl = (index) => {
+  const removeImageUrl = (index: number) => {
     setGroupData(prev => ({
       ...prev,
       main_img_url: prev.main_img_url.filter((_, i) => i !== index)
@@ -99,9 +103,9 @@ export default function AddProduct() {
   };
 
   // อัพเดทข้อมูลสินค้าปัจจุบัน
-  const handleProductChange = (e) => {
+  const handleProductChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    let parsedValue = value;
+    let parsedValue: string | number | undefined = value;
     
     // แปลงข้อมูลตัวเลขให้ถูกต้อง
     if (['quantity', 'make_price', 'price_origin', 'product_width', 'product_length', 'product_heigth', 'product_weight'].includes(name)) {
@@ -115,7 +119,7 @@ export default function AddProduct() {
   };
 
   // เพิ่มสินค้าลงในรายการ
-  const addProduct = (e) => {
+  const addProduct = (e: React.FormEvent) => {
     e.preventDefault();
     
     // ตรวจสอบข้อมูลที่จำเป็น
@@ -151,7 +155,7 @@ export default function AddProduct() {
   };
 
   // ลบสินค้าออกจากรายการ
-  const removeProduct = (index) => {
+  const removeProduct = (index: number) => {
     setProducts(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -168,7 +172,7 @@ export default function AddProduct() {
   };
 
   // บันทึกข้อมูลทั้งหมด
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // ตรวจสอบข้อมูลที่จำเป็น
@@ -326,7 +330,10 @@ export default function AddProduct() {
                           onClick={() => removeImageUrl(index)}
                           className="ml-2 text-red-600 hover:text-red-800"
                         >
-                          <X size={18} />
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
                         </button>
                       </div>
                     ))}
@@ -390,7 +397,10 @@ export default function AddProduct() {
               onClick={() => setShowProductForm(false)}
               className="text-gray-600 hover:text-gray-800"
             >
-              <X size={24} />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
             </button>
           </div>
           

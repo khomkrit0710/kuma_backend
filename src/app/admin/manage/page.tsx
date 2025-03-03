@@ -53,7 +53,7 @@ export default function AdminManage() {
       } else {
         setError(data.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
       }
-    } catch (err) {
+    } catch (error) {
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export default function AdminManage() {
       } else {
         setError(data.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ดูแลระบบ');
       }
-    } catch (err) {
+    } catch (error) {
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
     }
   };
@@ -110,7 +110,7 @@ export default function AdminManage() {
       } else {
         setError(data.message || 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
       }
-    } catch (err) {
+    } catch (error) {
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
     }
   };

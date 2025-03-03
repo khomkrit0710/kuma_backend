@@ -1,4 +1,4 @@
-// app/api/admin/[id]/route.ts
+// app/api/admin/[id]/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 // ดึงข้อมูล admin คนเดียว
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -23,7 +23,7 @@ export async function GET(
       );
     }
     
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     
     const admin = await prisma.admin.findUnique({
       where: { id },
@@ -37,7 +37,7 @@ export async function GET(
     }
     
     // ส่งข้อมูลกลับโดยไม่เปิดเผยรหัสผ่าน
-    const { password, ...adminWithoutPassword } = admin;
+    const { password: _pwd, ...adminWithoutPassword } = admin;
     
     return NextResponse.json(adminWithoutPassword);
   } catch (error) {
@@ -49,10 +49,20 @@ export async function GET(
   }
 }
 
+interface PatchRequestBody {
+  password?: string;
+  role?: 'ADMIN' | 'SUPER_ADMIN';
+}
+
+type UpdateData = {
+  password?: string;
+  role?: 'ADMIN' | 'SUPER_ADMIN';
+};
+
 // แก้ไขข้อมูล admin
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -65,8 +75,8 @@ export async function PATCH(
       );
     }
     
-    const id = parseInt(params.id);
-    const { password, role } = await request.json();
+    const id = parseInt(context.params.id);
+    const { password, role } = await request.json() as PatchRequestBody;
     
     // ตรวจสอบว่า admin ที่ต้องการแก้ไขมีอยู่หรือไม่
     const existingAdmin = await prisma.admin.findUnique({
@@ -80,7 +90,7 @@ export async function PATCH(
       );
     }
     
-    const updateData = {};
+    const updateData: UpdateData = {};
     
     // ถ้ามีการส่งรหัสผ่านมาให้เข้ารหัสก่อนบันทึก
     if (password) {
@@ -99,7 +109,7 @@ export async function PATCH(
     });
     
     // ส่งข้อมูลกลับโดยไม่เปิดเผยรหัสผ่าน
-    const { password: _, ...adminWithoutPassword } = updatedAdmin;
+    const { password: _pwd, ...adminWithoutPassword } = updatedAdmin;
     
     return NextResponse.json(adminWithoutPassword);
   } catch (error) {
@@ -114,7 +124,7 @@ export async function PATCH(
 // ลบ admin
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -127,7 +137,7 @@ export async function DELETE(
       );
     }
     
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     
     // ตรวจสอบว่า admin ที่ต้องการลบมีอยู่หรือไม่
     const existingAdmin = await prisma.admin.findUnique({
@@ -142,7 +152,7 @@ export async function DELETE(
     }
     
     // ไม่อนุญาตให้ลบตัวเอง
-    if (parseInt(session.user.id) === id) {
+    if (session.user.id && parseInt(session.user.id) === id) {
       return NextResponse.json(
         { message: 'ไม่สามารถลบบัญชีของตัวเองได้' },
         { status: 400 }

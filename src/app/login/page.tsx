@@ -30,7 +30,7 @@ export default function Login() {
         router.push('/');
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setLoading(false);
