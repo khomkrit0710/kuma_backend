@@ -11,8 +11,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-///Product//
+    //<<------------------Product------------------>>//
 model product {
   id              Int         @default(autoincrement())
   uuid            String      @default(uuid())
@@ -30,11 +29,21 @@ model product {
   product_heigth  Int?
   product_weight  Int?
   img_url         String?
-
   @@id([id,sku])
 }
 
-///Admin///
+model group_product {
+  id              Int         @id @default(autoincrement())
+  uuid            String      @default(uuid())
+  create_Date     DateTime    @default(now())
+  group_name      String      @db.Text @default("")
+  sku             String[]    
+  main_img_url    String[]    @default([])
+  description     String      @db.Text @default("")
+}
+
+
+    //<<------------------Login Admin------------------>>//
 enum AdminRole {
   ADMIN
   SUPER_ADMIN
