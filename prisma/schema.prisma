@@ -1,6 +1,5 @@
-//สร้างฐานข้อมูลและ migration 
-//npx prisma migrate dev --name init
-
+//สร้างฐานข้อมูลและ migration: npx prisma migrate dev --name init
+//ตรวจสอบการเชื่อมฐานข้อมูล: npx prisma studio
 
 generator client {
   provider = "prisma-client-js"
