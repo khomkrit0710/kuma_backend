@@ -80,7 +80,7 @@ export async function PATCH(
       );
     }
     
-    const updateData: any = {};
+    const updateData = {};
     
     // ถ้ามีการส่งรหัสผ่านมาให้เข้ารหัสก่อนบันทึก
     if (password) {
