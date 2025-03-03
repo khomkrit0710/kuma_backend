@@ -1,4 +1,5 @@
 //สร้างฐานข้อมูลและ migration: npx prisma migrate dev --name init
+//ลบอันเดิมแล้วรันใหม่: npx prisma migrate dev --name remove_product_table
 //ตรวจสอบการเชื่อมฐานข้อมูล: npx prisma studio
 
 generator client {
@@ -13,13 +14,24 @@ datasource db {
 
 ///Product//
 model product {
-  id            Int         @id @default(autoincrement())
-  sku           String
-  name          String
-  price         Int
-  product_type  String?
-  product_set   String?
-  createdAt     DateTime    @default(now())
+  id              Int         @default(autoincrement())
+  uuid            String      @default(uuid())
+  create_Date     DateTime    @default(now())
+  group_name      String      @db.Text @default("") //ข้อความขนาดใหญ่
+  sku             String      @default("")
+  name_sku        String      @default("")
+  quantity        Int         @default(0)
+  catagory        String?   
+  collaction      String?
+  make_price      Int?        
+  price_origin    Int         @default(0)
+  product_width   Int?        
+  product_length  Int?        
+  product_heigth  Int?
+  product_weight  Int?
+  img_url         String?
+
+  @@id([id,sku])
 }
 
 ///Admin///
