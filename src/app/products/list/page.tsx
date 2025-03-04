@@ -7,6 +7,7 @@ import { Edit, Trash2, Eye, Package } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+    //<<-------------------Type------------------->>
 interface GroupProduct {
   id: number;
   uuid: string;
@@ -18,14 +19,19 @@ interface GroupProduct {
 }
 
 export default function ProductList() {
+
+      //<<-------------------State------------------->>
   const { status } = useSession();
   const router = useRouter();
   const [groups, setGroups] = useState<GroupProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // ตรวจสอบสถานะการล็อกอิน
+
+      //<<-------------------userEffect------------------->>
+  //userEffect
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -34,6 +40,8 @@ export default function ProductList() {
     }
   }, [status, router]);
 
+
+        //<<-------------------Function------------------->>
   // ดึงข้อมูลกลุ่มสินค้า
   const fetchGroups = async () => {
     try {
@@ -87,8 +95,7 @@ export default function ProductList() {
       // เพิ่มการโหลดข้อมูลใหม่หลังจากลบสำเร็จ
       await fetchGroups();
       
-      // เพิ่มการแจ้งเตือนว่าลบสำเร็จ
-      alert('ลบกลุ่มสินค้าสำเร็จ');
+      setSuccessMessage('ลบกลุ่มสินค้าสำเร็จ');
       
     } catch (err) {
       console.error('เกิดข้อผิดพลาด:', err);
@@ -279,6 +286,42 @@ export default function ProductList() {
                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
               >
                 ลบ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md relative overflow-hidden">
+            <div className="bg-green-500 h-1 absolute top-0 left-0 right-0"></div>
+            <div className="flex items-center gap-3 text-green-600 mb-4">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-8 w-8" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                />
+              </svg>
+              <h2 className="text-xl font-semibold">ดำเนินการสำเร็จ</h2>
+            </div>
+            
+            <p className="text-gray-700 mb-6">{successMessage}</p>
+            
+            <div className="flex justify-end">
+              <button
+                onClick={() => setSuccessMessage(null)}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+              >
+                ตกลง
               </button>
             </div>
           </div>

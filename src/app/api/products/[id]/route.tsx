@@ -6,6 +6,7 @@ import { authOptions } from '../../auth/auth-options';
 
 const prisma = new PrismaClient();
 
+    //<<-------------------Type------------------->>
 interface ProductData {
   sku: string;
   name: string;
@@ -14,6 +15,7 @@ interface ProductData {
   product_set?: string | null;
 }
 
+    //<<-------------------API------------------->>
 // API endpoint สำหรับดึงข้อมูลสินค้าตาม ID
 export async function GET(
   request: NextRequest,

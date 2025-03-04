@@ -7,6 +7,8 @@ import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
+
+    //<<-------------------Type------------------->>
 interface ProductData {
   sku: string;
   name_sku: string;
@@ -33,6 +35,8 @@ interface RequestData {
   products: ProductData[];
 }
 
+
+    //<<-------------------API------------------->>
 // API endpoint สำหรับเพิ่มกลุ่มสินค้าและสินค้า
 export async function POST(request: NextRequest) {
   try {

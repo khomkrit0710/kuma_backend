@@ -7,6 +7,7 @@ import { authOptions } from '../../auth/auth-options';
 
 const prisma = new PrismaClient();
 
+    //<<-------------------Type------------------->>
 type CustomUser = {
   name?: string | null;
   email?: string | null;
@@ -14,7 +15,17 @@ type CustomUser = {
   role: string;
 };
 
-// ดึงข้อมูล admin คนเดียว
+interface PatchRequestBody {
+  password?: string;
+  role?: 'ADMIN' | 'SUPER_ADMIN';
+}
+
+type UpdateData = {
+  password?: string;
+  role?: 'ADMIN' | 'SUPER_ADMIN';
+};
+
+    //<<-------------------API------------------->>
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -67,15 +78,7 @@ export async function GET(
   }
 }
 
-interface PatchRequestBody {
-  password?: string;
-  role?: 'ADMIN' | 'SUPER_ADMIN';
-}
 
-type UpdateData = {
-  password?: string;
-  role?: 'ADMIN' | 'SUPER_ADMIN';
-};
 
 // แก้ไขข้อมูล admin
 export async function PATCH(

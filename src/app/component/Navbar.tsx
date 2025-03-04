@@ -6,7 +6,6 @@ import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { Session } from 'next-auth';
 
-// กำหนด type สำหรับ session
 type NavbarProps = {
   session: Session | null;
 };

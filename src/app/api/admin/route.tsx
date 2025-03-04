@@ -7,6 +7,7 @@ import { authOptions } from '../auth/auth-options';
 
 const prisma = new PrismaClient();
 
+    //<<-------------------Type------------------->>
 type CustomUser = {
   name?: string | null;
   email?: string | null;
@@ -14,6 +15,8 @@ type CustomUser = {
   role: string;
 };
 
+
+    //<<-------------------API------------------->>
 // ดึงข้อมูล admin ทั้งหมด
 export async function GET() {
   try {

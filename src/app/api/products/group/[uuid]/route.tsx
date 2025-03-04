@@ -6,6 +6,7 @@ import { authOptions } from '../../../auth/auth-options';
 
 const prisma = new PrismaClient();
 
+//<<-------------------Type------------------->>
 interface ProductData {
   sku: string;
   name_sku: string;
@@ -33,6 +34,7 @@ interface RequestData {
   products: ProductData[];
 }
 
+    //<<-------------------API------------------->>
 // API endpoint สำหรับดึงข้อมูลกลุ่มสินค้าและสินค้าที่เกี่ยวข้องตาม UUID
 export async function GET(
   request: NextRequest,

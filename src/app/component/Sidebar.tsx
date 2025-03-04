@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Session } from 'next-auth';
 
-// กำหนด type สำหรับ session
 type SidebarProps = {
   session: Session | null;
 };

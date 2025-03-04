@@ -1,10 +1,13 @@
+// src/app/products/add/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Trash2, Save } from 'lucide-react';
+import { PlusCircle, Trash2, Save, X, Check, AlertTriangle } from 'lucide-react';
 
+
+    //<<-------------------Type------------------->>
 interface ProductFormData {
   sku: string;
   name_sku: string;
@@ -27,14 +30,15 @@ interface GroupFormData {
 }
 
 export default function AddProduct() {
+
+      //<<-------------------State------------------->>
   const { status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showProductForm, setShowProductForm] = useState(false);
-  
-  // ข้อมูลกลุ่มสินค้า
+
   const [groupData, setGroupData] = useState<GroupFormData>({
     group_name: '',
     main_img_url: [],
@@ -62,7 +66,12 @@ export default function AddProduct() {
   
   // URL รูปภาพที่กำลังกรอก
   const [tempImageUrl, setTempImageUrl] = useState('');
+  
+  // เพิ่ม state สำหรับ popup ยืนยันการเพิ่มสินค้า
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
+
+      //<<-------------------useEffect------------------->>
   // ตรวจสอบสถานะการล็อกอิน
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -70,6 +79,8 @@ export default function AddProduct() {
     }
   }, [status, router]);
 
+
+      //<<-------------------Handle------------------->>
   // อัพเดทข้อมูลกลุ่มสินค้า
   const handleGroupChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -105,7 +116,12 @@ export default function AddProduct() {
     
     // แปลงข้อมูลตัวเลขให้ถูกต้อง
     if (['quantity', 'make_price', 'price_origin', 'product_width', 'product_length', 'product_heigth', 'product_weight'].includes(name)) {
-      parsedValue = value === '' ? undefined : Number(value);
+      // สำหรับ price_origin ไม่ให้เป็น undefined เพราะเป็นฟิลด์บังคับ
+      if (name === 'price_origin') {
+        parsedValue = value === '' ? 0 : Number(value);
+      } else {
+        parsedValue = value === '' ? undefined : Number(value);
+      }
     }
     
     setCurrentProduct(prev => ({
@@ -167,10 +183,8 @@ export default function AddProduct() {
     setError('');
   };
 
-  // บันทึกข้อมูลทั้งหมด
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // แสดง popup ยืนยันการเพิ่มสินค้า
+  const confirmAddProduct = () => {
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!groupData.group_name) {
       setError('กรุณากรอกชื่อกลุ่มสินค้า');
@@ -182,6 +196,17 @@ export default function AddProduct() {
       return;
     }
     
+    // แสดง popup ยืนยัน
+    setShowConfirmDialog(true);
+  };
+
+  // ปิด popup ยืนยัน
+  const closeConfirmDialog = () => {
+    setShowConfirmDialog(false);
+  };
+
+  // บันทึกข้อมูลทั้งหมด
+  const handleSubmit = async () => {
     setLoading(true);
     setError('');
     setSuccess('');
@@ -220,14 +245,19 @@ export default function AddProduct() {
         });
         setProducts([]);
         
+        // ปิด popup ยืนยัน
+        setShowConfirmDialog(false);
+        
         // เด้งไปหน้ารายการสินค้าหลังจากบันทึกสำเร็จ
-        // router.push('/products/list');
+        router.push('/products/list');
       } else {
         setError(result.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        setShowConfirmDialog(false);
       }
     } catch (err) {
       console.error('เกิดข้อผิดพลาด:', err);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+      setShowConfirmDialog(false);
     } finally {
       setLoading(false);
     }
@@ -258,13 +288,13 @@ export default function AddProduct() {
       )}
       
       <div className="bg-white p-6 rounded shadow-md mb-6">
-        <h2 className="text-xl font-semibold mb-4">ข้อมูลกลุ่มสินค้า</h2>
+        <h2 className="text-xl font-semibold mb-4">ข้อมูลสินค้า</h2>
         
         <form>
           <div className="grid grid-cols-1 gap-4">
             <div className="mb-4">
               <label htmlFor="group_name" className="block text-sm font-medium text-gray-700 mb-1">
-                ชื่อกลุ่มสินค้า <span className="text-red-500">*</span>
+                ชื่อสินค้า <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -419,10 +449,11 @@ export default function AddProduct() {
               
               <div className="mb-4">
                 <label htmlFor="name_sku" className="block text-sm font-medium text-gray-700 mb-1">
-                  ชื่อสินค้า <span className="text-red-500">*</span>
+                  ชื่อ <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  placeholder='ex.สีแดง'
                   id="name_sku"
                   name="name_sku"
                   className="w-full p-2 border border-gray-300 rounded"
@@ -431,7 +462,38 @@ export default function AddProduct() {
                   required
                 />
               </div>
+
+              <div className="mb-4">
+                <label htmlFor="make_price" className="block text-sm font-medium text-gray-700 mb-1">
+                  ราคาที่ต้องการแสดง
+                </label>
+                <input
+                  type="number"
+                  id="make_price"
+                  name="make_price"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={currentProduct.make_price || ''}
+                  onChange={handleProductChange}
+                  min="0"
+                />
+              </div>
               
+              <div className="mb-4">
+                <label htmlFor="price_origin" className="block text-sm font-medium text-gray-700 mb-1">
+                  ราคาขาย <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="price_origin"
+                  name="price_origin"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={currentProduct.price_origin}
+                  onChange={handleProductChange}
+                  min="0"
+                  required
+                />
+              </div>
+
               <div className="mb-4">
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
                   จำนวน <span className="text-red-500">*</span>
@@ -476,36 +538,7 @@ export default function AddProduct() {
                 />
               </div>
               
-              <div className="mb-4">
-                <label htmlFor="make_price" className="block text-sm font-medium text-gray-700 mb-1">
-                  ต้นทุน
-                </label>
-                <input
-                  type="number"
-                  id="make_price"
-                  name="make_price"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  value={currentProduct.make_price || ''}
-                  onChange={handleProductChange}
-                  min="0"
-                />
-              </div>
-              
-              <div className="mb-4">
-                <label htmlFor="price_origin" className="block text-sm font-medium text-gray-700 mb-1">
-                  ราคาขาย <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="price_origin"
-                  name="price_origin"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  value={currentProduct.price_origin}
-                  onChange={handleProductChange}
-                  min="0"
-                  required
-                />
-              </div>
+
               
               <div className="mb-4">
                 <label htmlFor="product_width" className="block text-sm font-medium text-gray-700 mb-1">
@@ -611,12 +644,66 @@ export default function AddProduct() {
         <div className="bg-white p-6 rounded shadow-md">
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={confirmAddProduct}
             disabled={loading}
             className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
           >
             {loading ? 'กำลังบันทึก...' : 'บันทึกข้อมูลทั้งหมด'}
           </button>
+        </div>
+      )}
+      
+      {/* Popup ยืนยันการเพิ่มสินค้า */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <div className="flex items-center gap-3 text-green-600 mb-4">
+              <AlertTriangle size={24} />
+              <h2 className="text-xl font-semibold">ยืนยันการเพิ่มสินค้า</h2>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-700 mb-4">
+                คุณต้องการเพิ่มกลุ่มสินค้า &quot;{groupData.group_name}&quot; และสินค้าทั้งหมด {products.length} รายการใช่หรือไม่?
+              </p>
+              
+              <div className="bg-gray-100 p-3 rounded border border-gray-300">
+                <p className="font-medium">รายละเอียด:</p>
+                <ul className="list-disc pl-5 mt-2 text-sm text-gray-600">
+                  <li>ชื่อกลุ่มสินค้า: {groupData.group_name}</li>
+                  <li>จำนวนสินค้า: {products.length} รายการ</li>
+                  <li>จำนวนรูปภาพ: {groupData.main_img_url.length} รูป</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={closeConfirmDialog}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors flex items-center gap-2"
+              >
+                <X size={16} />
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  <>
+                    <Check size={16} />
+                    ยืนยัน
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

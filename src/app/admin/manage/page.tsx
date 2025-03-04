@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
+
+//<<-------------------Type------------------->>
 type CustomUser = {
   name?: string | null;
   email?: string | null;
@@ -20,15 +22,15 @@ type Admin = {
 };
 
 export default function AdminManage() {
+
+  //<<-------------------State------------------->>
   const { data: session, status } = useSession();
   const router = useRouter();
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
   const [newAdmin, setNewAdmin] = useState({ username: '', password: '', role: 'ADMIN' });
   const [showAddForm, setShowAddForm] = useState(false);
-  
   const [passwordReset, setPasswordReset] = useState<{
     adminId: number | null;
     newPassword: string;
@@ -39,7 +41,7 @@ export default function AdminManage() {
     showForm: false
   });
   
-
+  //<<-------------------useEffect------------------->>
   useEffect(() => {
     if (status === 'loading') return;
     if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
@@ -49,6 +51,7 @@ export default function AdminManage() {
     }
   }, [session, status, router]);
 
+  //<<-------------------function------------------->>
   const fetchAdmins = async () => {
     setLoading(true);
     const response = await fetch('/api/admin');
@@ -101,7 +104,7 @@ export default function AdminManage() {
   if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
     return null;
   }
-
+  //<<-------------------Use effect------------------->>
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">จัดการผู้ดูแลระบบ</h1>
@@ -121,7 +124,6 @@ export default function AdminManage() {
         </button>
       </div>
       
-      {/* แบบฟอร์มเพิ่ม Admin ใหม่ */}
       {showAddForm && (
         <div className="bg-white p-6 rounded shadow-md mb-8">
           <h2 className="text-xl font-semibold mb-4">เพิ่มผู้ดูแลระบบใหม่</h2>
@@ -224,7 +226,7 @@ export default function AdminManage() {
         </table>
       </div>
       
-      {/* แบบฟอร์มเปลี่ยนรหัสผ่าน (Modal) */}
+      {/* แบบฟอร์มเปลี่ยนรหัสผ่าน */}
       {passwordReset.showForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded shadow-md w-full max-w-md">

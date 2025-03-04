@@ -8,6 +8,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 
+
+      //<<-------------------Type------------------->>
 interface Product {
   id: number;
   uuid: string;
@@ -43,6 +45,8 @@ interface GroupData {
 }
 
 export default function ViewProduct() {
+
+        //<<-------------------State------------------->>
   const params = useParams();
   const uuid = params.uuid as string;
   
@@ -54,6 +58,8 @@ export default function ViewProduct() {
   const [activeTab, setActiveTab] = useState<'info' | 'products'>('info');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+
+      //<<-------------------Function------------------->>
   // ดึงข้อมูลกลุ่มสินค้าและสินค้าทั้งหมด
   const fetchGroupData = useCallback(async () => {
     if (!uuid) return;
@@ -289,26 +295,24 @@ export default function ViewProduct() {
                       </p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded">
-                      <p className="text-sm text-gray-500">ราคาเฉลี่ย</p>
-                      <p className="text-xl font-bold">
-                        {groupData.products.length > 0
-                          ? (
-                              groupData.products.reduce(
-                                (sum, product) => sum + product.price_origin,
-                                0
-                              ) / groupData.products.length
-                            ).toFixed(2)
-                          : 0}{' '}
-                        บาท
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded">
                       <p className="text-sm text-gray-500">หมวดหมู่</p>
                       <p className="text-xl font-bold">
                         {[
                           ...new Set(
                             groupData.products
                               .map((product) => product.catagory)
+                              .filter(Boolean)
+                          ),
+                        ].join(', ') || 'ไม่มีหมวดหมู่'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded">
+                      <p className="text-sm text-gray-500">คอลเลคชัน</p>
+                      <p className="text-xl font-bold">
+                        {[
+                          ...new Set(
+                            groupData.products
+                              .map((product) => product.collaction)
                               .filter(Boolean)
                           ),
                         ].join(', ') || 'ไม่มีหมวดหมู่'}

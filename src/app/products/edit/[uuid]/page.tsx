@@ -6,6 +6,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { Edit, Trash2, Save, ArrowLeft, Check, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
+
+    //<<-------------------Type------------------->>
 interface Product {
   id: number;
   uuid: string;
@@ -46,6 +48,8 @@ interface EditProductState extends Omit<Product, 'id' | 'uuid' | 'create_Date' |
 }
 
 export default function EditProduct() {
+
+      //<<-------------------State------------------->>
   const params = useParams();
   const uuid = params.uuid as string;
   
