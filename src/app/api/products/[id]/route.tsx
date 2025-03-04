@@ -17,10 +17,10 @@ interface ProductData {
 // API endpoint สำหรับดึงข้อมูลสินค้าตาม ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -60,7 +60,7 @@ export async function GET(
 // API endpoint สำหรับแก้ไขข้อมูลสินค้า
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบการล็อกอิน
@@ -72,7 +72,7 @@ export async function PUT(
       );
     }
     
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -123,7 +123,7 @@ export async function PUT(
 // API endpoint สำหรับลบสินค้า
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบการล็อกอิน
@@ -135,7 +135,7 @@ export async function DELETE(
       );
     }
     
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     
     if (isNaN(id)) {
       return NextResponse.json(

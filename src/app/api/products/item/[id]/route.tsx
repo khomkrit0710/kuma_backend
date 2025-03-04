@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 // API endpoint สำหรับลบสินค้าเฉพาะรายการ
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบการล็อกอิน

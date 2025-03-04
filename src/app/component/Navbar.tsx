@@ -4,8 +4,14 @@
 import React from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { Session } from 'next-auth';
 
-function Navbar({ session }) {
+// กำหนด type สำหรับ session
+type NavbarProps = {
+  session: Session | null;
+};
+
+function Navbar({ session }: NavbarProps) {
   return (
     <div 
       className='bg-[#3c434a] p-1 flex items-center justify-between' 

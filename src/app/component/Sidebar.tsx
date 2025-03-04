@@ -4,10 +4,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Session } from 'next-auth';
 
-function Sidebar({ session }) {
+// กำหนด type สำหรับ session
+type SidebarProps = {
+  session: Session | null;
+};
+
+function Sidebar({ session }: SidebarProps) {
   const pathname = usePathname();
-  const isActive = (path) => pathname === path;
+  const isActive = (path: string) => pathname === path;
   const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
 
   return (

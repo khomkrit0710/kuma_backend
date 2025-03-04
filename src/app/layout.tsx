@@ -7,6 +7,7 @@ import React from 'react'
 import AuthProvider from './context/AuthProvider'
 import Navbar from './component/Navbar'
 import Sidebar from './component/Sidebar'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'ระบบหลังบ้าน Kuma-mall',
@@ -21,8 +22,10 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(authOptions);
   
-  // ถ้าไม่มี session และไม่ได้อยู่ที่หน้า login ให้เปลี่ยนเป็น layout สำหรับคนที่ยังไม่ได้ login
-  const isLoginPage = children.props?.childProp?.segment === 'login';
+  // ใช้ headers() เพื่อตรวจสอบ path ปัจจุบัน
+  const headersList = headers();
+  const pathname = (await headersList).get('x-pathname') || '';
+  const isLoginPage = pathname.includes('/login');
   
   if (!session && !isLoginPage) {
     return (
@@ -59,4 +62,3 @@ export default async function RootLayout({
     </html>
   )
 }
-
