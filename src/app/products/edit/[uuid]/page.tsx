@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
-import { Edit, Trash2, Save, ArrowLeft, Check } from 'lucide-react';
+import { Edit, Trash2, Save, ArrowLeft, Check, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 interface Product {
@@ -42,6 +42,7 @@ interface GroupData {
 
 interface EditProductState extends Omit<Product, 'id' | 'uuid' | 'create_Date' | 'group_name'> {
   isNew?: boolean;
+  id?: number; // เพิ่ม id เพื่อใช้ในการลบ
 }
 
 export default function EditProduct() {
@@ -68,6 +69,21 @@ export default function EditProduct() {
   
   // URL รูปภาพที่กำลังกรอก
   const [tempImageUrl, setTempImageUrl] = useState('');
+  
+  // State สำหรับ popup ยืนยันการลบ
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    index: number | null;
+    id: number | null;
+    sku: string | null;
+    name: string | null;
+  }>({
+    show: false,
+    index: null,
+    id: null,
+    sku: null,
+    name: null
+  });
 
   // ดึงข้อมูลเมื่อโหลดหน้า
   const fetchGroupData = useCallback(async () => {
@@ -75,7 +91,16 @@ export default function EditProduct() {
     
     try {
       setLoading(true);
-      const response = await fetch(`/api/products/group/${uuid}`);
+      const response = await fetch(`/api/products/group/${uuid}`, {
+        // เพิ่ม cache: 'no-store' เพื่อไม่ให้ browser cache ข้อมูล
+        cache: 'no-store',
+        // เพิ่ม headers เพื่อป้องกัน cache จากทุกระดับ
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error('เกิดข้อผิดพลาดในการดึงข้อมูล');
@@ -89,6 +114,7 @@ export default function EditProduct() {
       
       // ตั้งค่ารายการสินค้า
       setProducts(data.products.map((product: Product) => ({
+        id: product.id, // เก็บ id ไว้สำหรับการลบ
         sku: product.sku,
         name_sku: product.name_sku,
         quantity: product.quantity,
@@ -222,9 +248,70 @@ export default function EditProduct() {
     setSuccess('บันทึกสินค้าสำเร็จ');
   };
 
-  // ลบสินค้า
-  const removeProduct = (index: number) => {
-    setProducts(prev => prev.filter((_, i) => i !== index));
+  // แสดง popup ยืนยันการลบ
+  const showDeleteConfirm = (index: number) => {
+    const product = products[index];
+    setDeleteConfirm({
+      show: true,
+      index: index,
+      id: product.id || null,
+      sku: product.sku,
+      name: product.name_sku
+    });
+  };
+
+  // ปิด popup ยืนยันการลบ
+  const cancelDelete = () => {
+    setDeleteConfirm({
+      show: false,
+      index: null,
+      id: null,
+      sku: null,
+      name: null
+    });
+  };
+
+  // ลบสินค้าทันที
+  const confirmDeleteProduct = async () => {
+    if (deleteConfirm.id === null || !deleteConfirm.sku || deleteConfirm.index === null) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // ลบสินค้าด้วย API
+      const response = await fetch(`/api/products/item/${deleteConfirm.id}?sku=${deleteConfirm.sku}&uuid=${uuid}`, {
+        method: 'DELETE',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('เกิดข้อผิดพลาดในการลบสินค้า');
+      }
+      
+      // ลบออกจาก state
+      setProducts(prev => prev.filter((_, index) => index !== deleteConfirm.index));
+      
+      // แสดงข้อความสำเร็จ
+      setSuccess('ลบสินค้าสำเร็จ');
+      
+      // รีเซ็ต popup
+      cancelDelete();
+      
+      // โหลดข้อมูลใหม่
+      await fetchGroupData();
+      
+    } catch (err) {
+      console.error('เกิดข้อผิดพลาด:', err);
+      setError('เกิดข้อผิดพลาดในการลบสินค้า');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // บันทึกข้อมูลทั้งหมด
@@ -265,6 +352,9 @@ export default function EditProduct() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(data),
       });
@@ -721,7 +811,7 @@ export default function EditProduct() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => removeProduct(index)}
+                          onClick={() => showDeleteConfirm(index)}
                           className="text-red-600 hover:text-red-800"
                           disabled={!!editingProduct}
                         >
@@ -753,6 +843,45 @@ export default function EditProduct() {
           {submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูลทั้งหมด'}
         </button>
       </div>
+      
+      {/* Popup ยืนยันการลบสินค้า */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <AlertTriangle size={24} />
+              <h2 className="text-xl font-semibold">ยืนยันการลบสินค้า</h2>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-700 mb-4">
+                คุณต้องการลบสินค้านี้ใช่หรือไม่? การกระทำนี้จะลบสินค้าออกจากฐานข้อมูลทันที และไม่สามารถเปลี่ยนกลับได้
+              </p>
+              
+              <div className="bg-gray-100 p-3 rounded border border-gray-300">
+                <p className="font-medium">{deleteConfirm.name}</p>
+                <p className="text-sm text-gray-500">SKU: {deleteConfirm.sku}</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={confirmDeleteProduct}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                ลบสินค้า
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -60,7 +60,16 @@ export default function ViewProduct() {
     
     try {
       setLoading(true);
-      const response = await fetch(`/api/products/group/${uuid}`);
+      const response = await fetch(`/api/products/group/${uuid}`, {
+        // เพิ่ม cache: 'no-store' เพื่อไม่ให้ browser cache ข้อมูล
+        cache: 'no-store',
+        // เพิ่ม headers เพื่อป้องกัน cache จากทุกระดับ
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate', 
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error('เกิดข้อผิดพลาดในการดึงข้อมูล');

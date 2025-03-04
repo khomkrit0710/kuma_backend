@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '../../auth/auth-options';
 
 const prisma = new PrismaClient();
 
@@ -14,14 +14,13 @@ type CustomUser = {
   role: string;
 };
 
-
-
 // ดึงข้อมูล admin คนเดียว
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     // ตรวจสอบสิทธิ์ Super Admin
@@ -33,9 +32,9 @@ export async function GET(
     }
 
     // แปลง id จาก string เป็น number และตรวจสอบค่าที่ถูกต้อง
-    const id = parseInt(params.id, 10);
+    const adminId = parseInt(id, 10);
 
-    if (isNaN(id)) {
+    if (isNaN(adminId)) {
       return NextResponse.json(
         { message: 'ID ไม่ถูกต้อง' },
         { status: 400 }
@@ -44,7 +43,7 @@ export async function GET(
 
     // ค้นหาข้อมูล admin
     const admin = await prisma.admin.findUnique({
-      where: { id },
+      where: { id: adminId },
     });
 
     if (!admin) {
@@ -81,9 +80,10 @@ type UpdateData = {
 // แก้ไขข้อมูล admin
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     // ตรวจสอบสิทธิ์ Super Admin
@@ -94,12 +94,12 @@ export async function PATCH(
       );
     }
     
-    const id = parseInt(params.id);
+    const adminId = parseInt(id);
     const { password, role } = await request.json() as PatchRequestBody;
     
     // ตรวจสอบว่า admin ที่ต้องการแก้ไขมีอยู่หรือไม่
     const existingAdmin = await prisma.admin.findUnique({
-      where: { id },
+      where: { id: adminId },
     });
     
     if (!existingAdmin) {
@@ -123,7 +123,7 @@ export async function PATCH(
     
     // อัปเดตข้อมูล admin
     const updatedAdmin = await prisma.admin.update({
-      where: { id },
+      where: { id: adminId },
       data: updateData,
     });
     
@@ -144,9 +144,10 @@ export async function PATCH(
 // ลบ admin
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     // ตรวจสอบสิทธิ์ Super Admin
@@ -157,11 +158,11 @@ export async function DELETE(
       );
     }
     
-    const id = parseInt(params.id);
+    const adminId = parseInt(id);
     
     // ตรวจสอบว่า admin ที่ต้องการลบมีอยู่หรือไม่
     const existingAdmin = await prisma.admin.findUnique({
-      where: { id },
+      where: { id: adminId },
     });
     
     if (!existingAdmin) {
@@ -181,7 +182,7 @@ export async function DELETE(
     
     // ลบ admin
     await prisma.admin.delete({
-      where: { id },
+      where: { id: adminId },
     });
     
     return NextResponse.json(

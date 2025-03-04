@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from '../../../auth/auth-options';
 
 const prisma = new PrismaClient();
 
@@ -36,10 +36,9 @@ interface RequestData {
 // API endpoint สำหรับดึงข้อมูลกลุ่มสินค้าและสินค้าที่เกี่ยวข้องตาม UUID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
-  const uuid = params.uuid;
-
+  const { uuid } = await params;
 
   if (!uuid || typeof uuid !== 'string') {
     return NextResponse.json({ message: 'UUID ไม่ถูกต้อง' }, { status: 400 });
@@ -60,15 +59,13 @@ export async function GET(
   return NextResponse.json({ group, products });
 }
 
-
-
 // API endpoint สำหรับแก้ไขข้อมูลกลุ่มสินค้า
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
-    const uuid = params.uuid;
+    const { uuid } = await params;
     
     // ตรวจสอบการล็อกอิน
     const session = await getServerSession(authOptions);
@@ -185,10 +182,10 @@ export async function PUT(
 // API endpoint สำหรับลบกลุ่มสินค้าและสินค้าที่เกี่ยวข้อง
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
-    const uuid = params.uuid;
+    const { uuid } = await params;
     
     // ตรวจสอบการล็อกอิน
     const session = await getServerSession(authOptions);

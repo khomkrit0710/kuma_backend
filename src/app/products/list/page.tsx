@@ -38,7 +38,16 @@ export default function ProductList() {
   const fetchGroups = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/products/group');
+      const response = await fetch('/api/products/group', {
+        // เพิ่ม cache: 'no-store' เพื่อไม่ให้ browser cache ข้อมูล
+        cache: 'no-store',
+        // เพิ่ม headers เพื่อป้องกัน cache จากทุกระดับ
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error('เกิดข้อผิดพลาดในการดึงข้อมูล');
@@ -60,6 +69,11 @@ export default function ProductList() {
       setLoading(true);
       const response = await fetch(`/api/products/group/${uuid}`, {
         method: 'DELETE',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) {
@@ -69,6 +83,13 @@ export default function ProductList() {
       // อัปเดตรายการหลังลบ
       setGroups(groups.filter(group => group.uuid !== uuid));
       setConfirmDelete(null);
+      
+      // เพิ่มการโหลดข้อมูลใหม่หลังจากลบสำเร็จ
+      await fetchGroups();
+      
+      // เพิ่มการแจ้งเตือนว่าลบสำเร็จ
+      alert('ลบกลุ่มสินค้าสำเร็จ');
+      
     } catch (err) {
       console.error('เกิดข้อผิดพลาด:', err);
       setError('เกิดข้อผิดพลาดในการลบข้อมูล');

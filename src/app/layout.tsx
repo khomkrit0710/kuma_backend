@@ -1,7 +1,7 @@
 // app/layout.tsx
 import './globals.css'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from './api/auth/[...nextauth]/route'
+import { authOptions } from './api/auth/auth-options'
 import type { Metadata } from 'next'
 import React from 'react'
 import AuthProvider from './context/AuthProvider'
