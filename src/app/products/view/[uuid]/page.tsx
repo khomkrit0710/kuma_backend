@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, Tag, Package2, ShoppingCart, Box, Info } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 
 interface Product {
   id: number;
@@ -41,7 +42,10 @@ interface GroupData {
   products: Product[];
 }
 
-export default function ViewProduct({ params }: { params: { uuid: string } }) {
+export default function ViewProduct() {
+  const params = useParams();
+  const uuid = params.uuid as string;
+  
   const { status } = useSession();
   const router = useRouter();
   const [groupData, setGroupData] = useState<GroupData | null>(null);
@@ -52,9 +56,11 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
 
   // ดึงข้อมูลกลุ่มสินค้าและสินค้าทั้งหมด
   const fetchGroupData = useCallback(async () => {
+    if (!uuid) return;
+    
     try {
       setLoading(true);
-      const response = await fetch(`/api/products/group/${params.uuid}`);
+      const response = await fetch(`/api/products/group/${uuid}`);
       
       if (!response.ok) {
         throw new Error('เกิดข้อผิดพลาดในการดึงข้อมูล');
@@ -68,7 +74,7 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
     } finally {
       setLoading(false);
     }
-  }, [params.uuid]);
+  }, [uuid]);
 
   // ตรวจสอบสถานะการล็อกอิน
   useEffect(() => {
@@ -138,7 +144,7 @@ export default function ViewProduct({ params }: { params: { uuid: string } }) {
         <h1 className="text-3xl font-bold">รายละเอียดกลุ่มสินค้า</h1>
         <div className="ml-auto">
           <Link
-            href={`/products/edit/${params.uuid}`}
+            href={`/products/edit/${uuid}`}
             className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
           >
             <Edit size={16} />

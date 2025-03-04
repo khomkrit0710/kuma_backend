@@ -81,7 +81,7 @@ type UpdateData = {
 // แก้ไขข้อมูล admin
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -94,7 +94,7 @@ export async function PATCH(
       );
     }
     
-    const id = parseInt(context.params.id);
+    const id = parseInt(params.id);
     const { password, role } = await request.json() as PatchRequestBody;
     
     // ตรวจสอบว่า admin ที่ต้องการแก้ไขมีอยู่หรือไม่
@@ -144,7 +144,7 @@ export async function PATCH(
 // ลบ admin
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -157,7 +157,7 @@ export async function DELETE(
       );
     }
     
-    const id = parseInt(context.params.id);
+    const id = parseInt(params.id);
     
     // ตรวจสอบว่า admin ที่ต้องการลบมีอยู่หรือไม่
     const existingAdmin = await prisma.admin.findUnique({

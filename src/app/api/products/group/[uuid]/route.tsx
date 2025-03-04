@@ -36,9 +36,9 @@ interface RequestData {
 // API endpoint สำหรับดึงข้อมูลกลุ่มสินค้าและสินค้าที่เกี่ยวข้องตาม UUID
 export async function GET(
   request: NextRequest,
-  context: { params: { uuid: string } }
+  { params }: { params: { uuid: string } }
 ) {
-  const uuid = context.params.uuid; 
+  const uuid = params.uuid;
 
 
   if (!uuid || typeof uuid !== 'string') {

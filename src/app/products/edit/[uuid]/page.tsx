@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Edit, Trash2, Save, ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 
@@ -44,7 +44,10 @@ interface EditProductState extends Omit<Product, 'id' | 'uuid' | 'create_Date' |
   isNew?: boolean;
 }
 
-export default function EditProduct({ params }: { params: { uuid: string } }) {
+export default function EditProduct() {
+  const params = useParams();
+  const uuid = params.uuid as string;
+  
   const { status } = useSession();
   const router = useRouter();
   const [originalData, setOriginalData] = useState<GroupData | null>(null);
@@ -68,9 +71,11 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
 
   // ดึงข้อมูลเมื่อโหลดหน้า
   const fetchGroupData = useCallback(async () => {
+    if (!uuid) return;
+    
     try {
       setLoading(true);
-      const response = await fetch(`/api/products/group/${params.uuid}`);
+      const response = await fetch(`/api/products/group/${uuid}`);
       
       if (!response.ok) {
         throw new Error('เกิดข้อผิดพลาดในการดึงข้อมูล');
@@ -103,7 +108,7 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
     } finally {
       setLoading(false);
     }
-  }, [params.uuid]);
+  }, [uuid]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -226,7 +231,7 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!groupData) return;
+    if (!groupData || !uuid) return;
     
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!groupData.group_name) {
@@ -256,7 +261,7 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
       };
       
       // ส่งข้อมูลไปยัง API
-      const response = await fetch(`/api/products/group/${params.uuid}`, {
+      const response = await fetch(`/api/products/group/${uuid}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -325,7 +330,7 @@ export default function EditProduct({ params }: { params: { uuid: string } }) {
     <div className="container mx-auto p-8">
       <div className="flex items-center gap-4 mb-8">
         <Link
-          href={`/products/view/${params.uuid}`}
+          href={`/products/view/${uuid}`}
           className="inline-flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
         >
           <ArrowLeft size={16} />
